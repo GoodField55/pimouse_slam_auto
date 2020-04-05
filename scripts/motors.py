@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #encoding: utf8
-import sys, rospy, math, tf
+import sys, rospy, math, tf, time
 from pimouse_ros.msg import MotorFreqs
 from geometry_msgs.msg import Twist, Quaternion, TransformStamped, Point
 from std_srvs.srv import Trigger, TriggerResponse
@@ -94,7 +94,7 @@ class Motor():
   def callback_on(self,message): return self.onoff_response(True)
   def callback_off(self,message): return self.onoff_response(False)
 
-  def send_odom(self):
+  def send_odom(self, send):
     self.cur_time = rospy.Time.now()
 
     dt = self.cur_time.to_sec() - self.last_time.to_sec()
@@ -105,19 +105,20 @@ class Motor():
     q = tf.transformations.quaternion_from_euler(0, 0, self.th)
     self.bc_odom.sendTransform((self.x,self.y,0.0), q, self.cur_time, "base_link", "odom")
 
-    odom = Odometry()
-    odom.header.stamp = self.cur_time
-    odom.header.frame_id = "odom"
-    odom.child_frame_id = "base_link"
+    if(send):	# send odom
+      odom = Odometry()
+      odom.header.stamp = self.cur_time
+      odom.header.frame_id = "odom"
+      odom.child_frame_id = "base_link"
 
-    odom.pose.pose.position = Point(self.x, self.y, 0.0)
-    odom.pose.pose.orientation = Quaternion(*q)
+      odom.pose.pose.position = Point(self.x, self.y, 0.0)
+      odom.pose.pose.orientation = Quaternion(*q)
 
-    odom.twist.twist.linear.x = self.vx
-    odom.twist.twist.linear.y = 0.0
-    odom.twist.twist.angular.z = self.vth
+      odom.twist.twist.linear.x = self.vx
+      odom.twist.twist.linear.y = 0.0
+      odom.twist.twist.angular.z = self.vth
 
-    self.pub_odom.publish(odom)
+      self.pub_odom.publish(odom)
 
     self.last_time = self.cur_time
 
@@ -125,13 +126,28 @@ if __name__ == '__main__':
   rospy.init_node('motors')
   m = Motor()
 
+  num = 10 # odom.publish / 1 sec
+  count = num
+
   rate = rospy.Rate(10)
   while not rospy.is_shutdown():
 #    if m.using_cmd_vel and rospy.Time.now().to_sec() - m.last_time.to_sec() >= 1.0:
 #      m.set_raw_freq(0,0)
 #      m.using_cmd_vel = False
 
-    m.send_odom()
+    count -= 1
+    if count == 0:
+      rospy.ServiceProxy('motor_off',Trigger).call()
+      time.sleep(1)
+
+      m.send_odom(True)		# send odom
+      count = num
+
+      rospy.ServiceProxy('motor_on',Trigger).call()
+
+    else:
+       m.send_odom(False)	# not send odom
+
     rate.sleep()
 
 
