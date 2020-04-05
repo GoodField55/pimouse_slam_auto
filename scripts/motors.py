@@ -137,13 +137,13 @@ if __name__ == '__main__':
 
     count -= 1
     if count == 0:
-      rospy.ServiceProxy('motor_off',Trigger).call()
-      time.sleep(1)
+#      rospy.ServiceProxy('motor_off',Trigger).call()
+#      time.sleep(1)
 
       m.send_odom(True)		# send odom
       count = num
 
-      rospy.ServiceProxy('motor_on',Trigger).call()
+#      rospy.ServiceProxy('motor_on',Trigger).call()
 
     else:
        m.send_odom(False)	# not send odom

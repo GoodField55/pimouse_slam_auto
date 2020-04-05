@@ -40,9 +40,12 @@ class WallAround():
             data.angular.z = math.pi
         elif random.random() > 0.5:
             data.angular.z = - math.pi
+            self.left_flag = False
+            self.right_flag = True      
         else:
           data.angular.z = math.pi
-
+          self.left_flag = True
+          self.right_flag = False
       elif self.too_right(self.sensor_values):
         data.angular.z = math.pi
         self.left_flag = True
