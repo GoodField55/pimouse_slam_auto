@@ -32,26 +32,29 @@ class WallAround():
 
     data.linear.x = 0.1
     data.angular.z = 0.0
+
+    z = math.pi / 3.0
+
     while not rospy.is_shutdown():
       if self.wall_front(self.sensor_values):
         if self.right_flag:
-            data.angular.z = - math.pi
+            data.angular.z = -1 * z
         elif self.left_flag:
-            data.angular.z = math.pi
+            data.angular.z = z
         elif random.random() > 0.5:
-            data.angular.z = - math.pi
+            data.angular.z = -1 * z
             self.left_flag = False
             self.right_flag = True      
         else:
-          data.angular.z = math.pi
+          data.angular.z = z
           self.left_flag = True
           self.right_flag = False
       elif self.too_right(self.sensor_values):
-        data.angular.z = math.pi
+        data.angular.z = z
         self.left_flag = True
         self.right_flag = False
       elif self.too_left(self.sensor_values):
-        data.angular.z = - math.pi
+        data.angular.z = -1 * z
         self.left_flag = False
         self.right_flag = True
       else:
